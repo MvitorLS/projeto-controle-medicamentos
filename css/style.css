@@ -443,6 +443,156 @@ footer {
 .text-muted { color: var(--text-muted); font-size: 14px; }
 
 /* ==========================================================================
+   Scanner de Receita
+   ========================================================================== */
+.scanner-desc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.scanner-drop {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.scanner-drop:hover,
+.scanner-drop.dragover {
+  border-color: var(--primary);
+  background-color: var(--primary-glow);
+}
+
+.scanner-drop-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  transition: transform 0.2s ease;
+}
+
+.scanner-drop:hover .scanner-drop-icon { transform: scale(1.1); }
+
+.scanner-drop-label {
+  font-size: 14px;
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.scanner-drop-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.scanner-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.scanner-link:hover { opacity: 0.8; }
+
+.scanner-progress { padding: 24px 0 8px; }
+
+.progress-track {
+  height: 6px;
+  background-color: var(--bg-input);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary), hsl(210, 80%, 65%));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.progress-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.scanner-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.scanner-med-card {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px 16px;
+  align-items: start;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.scanner-med-card.selected {
+  border-color: var(--primary);
+  background-color: var(--primary-glow);
+}
+
+.scanner-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+.scanner-med-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.scanner-med-fields .form-group label { font-size: 10px; }
+.scanner-med-fields input,
+.scanner-med-fields select { padding: 7px 10px; font-size: 13px; }
+
+.scanner-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.scanner-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: hsla(355, 68%, 56%, 0.1);
+  border: 1px solid hsla(355, 68%, 56%, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  color: hsl(355, 68%, 68%);
+}
+
+.hidden { display: none !important; }
+
+/* ==========================================================================
    Print Rules
    ========================================================================== */
 @media print {

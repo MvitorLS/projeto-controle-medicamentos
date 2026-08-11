@@ -284,6 +284,210 @@
   }
 
   // ===========================================================================
+  // Scanner de Receita
+  // ===========================================================================
+  function initScanner() {
+    const drop      = document.getElementById('scanner-drop');
+    if (!drop) return;
+
+    const input          = document.getElementById('scanner-input');
+    const browse         = document.getElementById('scanner-browse');
+    const progressEl     = document.getElementById('scanner-progress');
+    const progressFill   = document.getElementById('progress-fill');
+    const progressLabel  = document.getElementById('progress-label');
+    const resultsEl      = document.getElementById('scanner-results');
+    const resultsList    = document.getElementById('scanner-meds-list');
+    const resultTitle    = document.getElementById('scanner-results-title');
+    const btnAdd         = document.getElementById('btn-add-scanned');
+    const resetBtn       = document.getElementById('scanner-reset');
+    const errorEl        = document.getElementById('scanner-error');
+    const errorMsg       = document.getElementById('scanner-error-msg');
+    const errorReset     = document.getElementById('scanner-error-reset');
+
+    // Abre seletor ao clicar na zona ou no link
+    drop.addEventListener('click', () => input.click());
+    browse.addEventListener('click', e => { e.stopPropagation(); input.click(); });
+    input.addEventListener('change', () => { if (input.files[0]) processFile(input.files[0]); });
+
+    // Drag & Drop
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      drop.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) processFile(file);
+    });
+
+    // Resetar
+    [resetBtn, errorReset].forEach(btn => btn && btn.addEventListener('click', resetScanner));
+
+    function resetScanner() {
+      drop.classList.remove('hidden');
+      progressEl.classList.add('hidden');
+      resultsEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      progressFill.style.width = '0%';
+      input.value = '';
+    }
+
+    function showError(msg) {
+      drop.classList.add('hidden');
+      progressEl.classList.add('hidden');
+      resultsEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+      errorMsg.textContent = '⚠️ ' + msg;
+    }
+
+    async function processFile(file) {
+      const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!ALLOWED.includes(file.type)) {
+        return showError('Formato inválido. Use JPG, PNG, WEBP ou PDF.');
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        return showError('Arquivo muito grande. Máximo permitido: 10MB.');
+      }
+
+      // Mostra progresso
+      drop.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      resultsEl.classList.add('hidden');
+      progressEl.classList.remove('hidden');
+
+      const isPdf = file.type === 'application/pdf';
+      const steps = [
+        { pct: 20, label: 'Enviando arquivo...' },
+        { pct: 50, label: isPdf ? 'Extraindo texto do PDF...' : 'Realizando OCR na imagem...' },
+        { pct: 80, label: 'Identificando medicamentos...' },
+      ];
+
+      let stepIdx = 0;
+      const stepTimer = setInterval(() => {
+        if (stepIdx < steps.length) {
+          progressFill.style.width = steps[stepIdx].pct + '%';
+          progressLabel.textContent = steps[stepIdx].label;
+          stepIdx++;
+        }
+      }, 800);
+
+      try {
+        const formData = new FormData();
+        formData.append('receita', file);
+
+        const res = await fetch('/api/scanner', { method: 'POST', body: formData });
+        clearInterval(stepTimer);
+
+        progressFill.style.width = '100%';
+        progressLabel.textContent = 'Concluído!';
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          return showError(err.error || 'Erro ao processar o arquivo.');
+        }
+
+        const { medicamentos } = await res.json();
+
+        await new Promise(r => setTimeout(r, 400)); // breve pausa visual
+        progressEl.classList.add('hidden');
+
+        if (!medicamentos || medicamentos.length === 0) {
+          return showError('Nenhum medicamento identificado. Tente uma imagem mais nítida ou cadastre manualmente.');
+        }
+
+        renderScanResults(medicamentos);
+      } catch (err) {
+        clearInterval(stepTimer);
+        showError('Falha na conexão com o servidor.');
+      }
+    }
+
+    function renderScanResults(meds) {
+      resultTitle.textContent = `${meds.length} medicamento${meds.length > 1 ? 's' : ''} encontrado${meds.length > 1 ? 's' : ''}`;
+      resultsList.innerHTML = '';
+
+      meds.forEach((med, idx) => {
+        const card = document.createElement('div');
+        card.className = 'scanner-med-card selected';
+        card.innerHTML = `
+          <input type="checkbox" class="scanner-check" id="check-${idx}" checked>
+          <div class="scanner-med-fields">
+            <div class="form-group">
+              <label for="s-nome-${idx}">Medicamento</label>
+              <input type="text" id="s-nome-${idx}" value="${med.nome}">
+            </div>
+            <div class="form-group">
+              <label for="s-dosagem-${idx}">Dosagem</label>
+              <input type="text" id="s-dosagem-${idx}" value="${med.dosagem}">
+            </div>
+            <div class="form-group">
+              <label for="s-horario-${idx}">Horário</label>
+              <input type="time" id="s-horario-${idx}" value="${med.horario}">
+            </div>
+            <div class="form-group">
+              <label for="s-freq-${idx}">Frequência</label>
+              <select id="s-freq-${idx}">
+                <option value="1x ao dia" ${med.frequencia === '1x ao dia' ? 'selected' : ''}>1x ao dia</option>
+                <option value="2x ao dia (12 em 12h)" ${med.frequencia.includes('12') ? 'selected' : ''}>2x ao dia (12 em 12h)</option>
+                <option value="3x ao dia (8 em 8h)" ${med.frequencia.includes('8 em 8') ? 'selected' : ''}>3x ao dia (8 em 8h)</option>
+                <option value="Uso Contínuo / Conforme Necessário" ${med.frequencia.includes('Contínuo') ? 'selected' : ''}>Uso Contínuo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="s-estoque-${idx}">Estoque (un.)</label>
+              <input type="number" id="s-estoque-${idx}" value="${med.estoque}" min="1">
+            </div>
+          </div>
+        `;
+
+        // Checkbox atualiza classe visual
+        const chk = card.querySelector('.scanner-check');
+        chk.addEventListener('change', () => card.classList.toggle('selected', chk.checked));
+
+        resultsList.appendChild(card);
+      });
+
+      resultsEl.classList.remove('hidden');
+
+      // Botão de cadastrar selecionados
+      btnAdd.onclick = async () => {
+        const cards = resultsList.querySelectorAll('.scanner-med-card');
+        const selecionados = [];
+
+        cards.forEach((card, idx) => {
+          const chk = card.querySelector('.scanner-check');
+          if (!chk.checked) return;
+          selecionados.push({
+            nome:       document.getElementById(`s-nome-${idx}`).value.trim(),
+            dosagem:    document.getElementById(`s-dosagem-${idx}`).value.trim(),
+            horario:    document.getElementById(`s-horario-${idx}`).value,
+            frequencia: document.getElementById(`s-freq-${idx}`).value,
+            estoque:    parseInt(document.getElementById(`s-estoque-${idx}`).value) || 30,
+          });
+        });
+
+        if (selecionados.length === 0) return;
+
+        btnAdd.disabled = true;
+        btnAdd.textContent = 'Cadastrando...';
+
+        for (const med of selecionados) {
+          await api(API.meds, { method: 'POST', body: med });
+        }
+
+        await renderMedsTable();
+        initDashboard();
+        resetScanner();
+        btnAdd.disabled = false;
+        btnAdd.textContent = '+ Cadastrar Selecionados';
+
+        // Destaca a tabela de medicamentos
+        const table = document.getElementById('table-meds-body');
+        if (table) table.closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    }
+  }
+
+  // ===========================================================================
   // Bootstrap — detecta a página atual e inicializa o módulo correto
   // ===========================================================================
   document.addEventListener('DOMContentLoaded', () => {
@@ -293,19 +497,10 @@
       initDashboard();
     }
 
-    // Medicamentos
     initMedsForm();
-
-    // Medições
     initMeasuresForm();
-
-    // Relatório
-    if (page.includes('relatorio')) {
-      initRelatorio();
-    } else {
-      // Fallback: tenta iniciar o relatório se os elementos estiverem presentes
-      initRelatorio();
-    }
+    initScanner();
+    initRelatorio();
   });
 
 })();

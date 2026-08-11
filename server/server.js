@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname, '..')));
 // Rotas da API REST
 app.use('/api/medicamentos', require('./routes/medicamentos'));
 app.use('/api/medicoes',     require('./routes/medicoes'));
+app.use('/api/scanner',      require('./routes/scanner'));
 
 // Fallback para o index.html em qualquer rota não-API
 app.get('*', (req, res) => {

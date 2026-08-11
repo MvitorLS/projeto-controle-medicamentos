@@ -43,6 +43,47 @@
       </div>
     </div>
 
+    <!-- Card: Scanner de Receita -->
+    <section class="card scanner-card" id="scanner-section" style="margin-bottom: 32px;">
+      <div class="card-title">
+        <span>🔍 Escanear Receita Médica</span>
+        <span class="badge badge-success">NOVO</span>
+      </div>
+      <p class="scanner-desc">Envie uma foto ou PDF da receita e o sistema preencherá os medicamentos automaticamente.</p>
+
+      <!-- Zona de Drop -->
+      <div class="scanner-drop" id="scanner-drop">
+        <input type="file" id="scanner-input" accept="image/jpeg,image/png,image/webp,application/pdf" hidden>
+        <div class="scanner-drop-icon" id="scanner-drop-icon">📄</div>
+        <p class="scanner-drop-label">Arraste a receita aqui ou <button class="scanner-link" id="scanner-browse">selecione o arquivo</button></p>
+        <p class="scanner-drop-hint">PDF (teleconsulta) · JPG · PNG &nbsp;·&nbsp; Máx. 10MB</p>
+      </div>
+
+      <!-- Progresso -->
+      <div class="scanner-progress hidden" id="scanner-progress">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <p class="progress-label" id="progress-label">Enviando arquivo...</p>
+      </div>
+
+      <!-- Resultados -->
+      <div class="scanner-results hidden" id="scanner-results">
+        <div class="scanner-results-header">
+          <span id="scanner-results-title">Medicamentos encontrados</span>
+          <button class="scanner-link" id="scanner-reset">↩ Nova receita</button>
+        </div>
+        <div id="scanner-meds-list"></div>
+        <div class="scanner-actions">
+          <button class="btn btn-primary" id="btn-add-scanned">+ Cadastrar Selecionados</button>
+        </div>
+      </div>
+
+      <!-- Erro -->
+      <div class="scanner-error hidden" id="scanner-error">
+        <span id="scanner-error-msg"></span>
+        <button class="scanner-link" id="scanner-error-reset">Tentar novamente</button>
+      </div>
+    </section>
+
     <!-- Card de Cadastro de Novo Medicamento -->
     <section class="card" style="margin-bottom: 32px;">
       <h2 class="card-title">Cadastrar Novo Medicamento</h2>
