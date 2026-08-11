@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicamentos - Gestão e Cadastro</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header & Menu de Navegação Global -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">💊</div>
+        <div class="brand-title">
+          MediControl
+          <small>Gestão de Saúde & Medicamentos</small>
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="medicamentos.html" class="active">Medicamentos</a></li>
+          <li><a href="medicoes.html">Medições de Saúde</a></li>
+          <li><a href="relatorio.html">Relatório Médico</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Gestão de Medicamentos</h1>
+        <p class="page-subtitle">Cadastre seus remédios, defina horários de uso e controle o estoque de pílulas.</p>
+      </div>
+    </div>
+
+    <!-- Card de Cadastro de Novo Medicamento -->
+    <section class="card" style="margin-bottom: 32px;">
+      <h2 class="card-title">Cadastrar Novo Medicamento</h2>
+      <form id="form-novo-medicamento">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="med-nome">Nome do Medicamento:</label>
+            <input type="text" id="med-nome" placeholder="Ex: Losartana Potássica" required>
+          </div>
+
+          <div class="form-group">
+            <label for="med-dosagem">Dosagem:</label>
+            <input type="text" id="med-dosagem" placeholder="Ex: 50mg ou 10ml" required>
+          </div>
+
+          <div class="form-group">
+            <label for="med-horario">Horário do Dose:</label>
+            <input type="time" id="med-horario" required>
+          </div>
+
+          <div class="form-group">
+            <label for="med-frequencia">Frequência:</label>
+            <select id="med-frequencia">
+              <option value="1x ao dia">1x ao dia (Diário)</option>
+              <option value="2x ao dia (12 em 12h)">2x ao dia (12 em 12h)</option>
+              <option value="3x ao dia (8 em 8h)">3x ao dia (8 em 8h)</option>
+              <option value="Uso Contínuo / Conforme Necessário">Uso Contínuo / Conforme Necessário</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="med-estoque">Estoque Inicial (comprimidos):</label>
+            <input type="number" id="med-estoque" min="1" value="30">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">+ Cadastrar Medicamento</button>
+      </form>
+    </section>
+
+    <!-- Tabela de Medicamentos Cadastrados -->
+    <section class="card">
+      <h2 class="card-title">Seus Medicamentos Cadastrados</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Dosagem</th>
+              <th>Horário</th>
+              <th>Frequência</th>
+              <th>Estoque</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-meds-body">
+            <!-- Renderizado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>&copy; 2026 MediControl — Sistema de Controle de Medicamentos & Medições de Saúde. Autoria: Vitor.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

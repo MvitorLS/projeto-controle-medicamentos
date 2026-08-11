@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório Médico - MediControl</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header & Menu de Navegação Global -->
+  <header class="no-print">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">💊</div>
+        <div class="brand-title">
+          MediControl
+          <small>Gestão de Saúde & Medicamentos</small>
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="medicamentos.html">Medicamentos</a></li>
+          <li><a href="medicoes.html">Medições de Saúde</a></li>
+          <li><a href="relatorio.html" class="active">Relatório Médico</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo do Relatório Exportável -->
+  <main>
+    <div class="page-header no-print">
+      <div>
+        <h1 class="page-title">Relatório de Acompanhamento Médico</h1>
+        <p class="page-subtitle">Imprima ou salve este documento para apresentar durante a sua consulta médica.</p>
+      </div>
+      <div>
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir / Salvar PDF</button>
+      </div>
+    </div>
+
+    <!-- Folha do Relatório -->
+    <article class="card" style="padding: 40px;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 24px;">
+        <div>
+          <h2 style="font-size: 22px; color: var(--primary);">📋 Relatório de Saúde & Medicamentos</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Emitido via MediControl — Sistema Personalizado de Saúde</p>
+        </div>
+        <div style="text-align: right; font-size: 13px;">
+          <p><strong>Data de Emissão:</strong> <span id="data-emissao">—</span></p>
+          <p><strong>Paciente:</strong> Registro Pessoal</p>
+        </div>
+      </div>
+
+      <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-dark);">1. Medicamentos em Uso Contínuo</h3>
+      <div class="table-responsive" style="margin-bottom: 32px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Medicamento</th>
+              <th>Dosagem</th>
+              <th>Horário</th>
+              <th>Frequência</th>
+              <th>Estoque Restante</th>
+            </tr>
+          </thead>
+          <tbody id="table-meds-body">
+            <!-- Preenchido dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-dark);">2. Histórico Recente de Medições Vitais</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo de Medição</th>
+              <th>Valor Registrado</th>
+              <th>Status</th>
+              <th>Data e Hora</th>
+            </tr>
+          </thead>
+          <tbody id="table-measures-body">
+            <!-- Preenchido dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 40px; padding-top: 16px; border-top: 1px dashed var(--border); font-size: 12px; color: var(--text-muted); text-align: center;">
+        Documento gerado para fins de acompanhamento pessoal de saúde. Apresente ao seu médico de confiança.
+      </div>
+    </article>
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="no-print">
+    <p>&copy; 2026 MediControl — Sistema de Controle de Medicamentos & Medições de Saúde. Autoria: Vitor.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

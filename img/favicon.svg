@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#0284c7"/>
+  <!-- Ícone de Pílula e Coração -->
+  <path d="M22 42l16-16a8.5 8.5 0 1 1 12 12L34 54a8.5 8.5 0 1 1-12-12z" fill="#38bdf8"/>
+  <path d="M14 26l16-16a8.5 8.5 0 0 1 12 12L26 38a8.5 8.5 0 0 1-12-12z" fill="#ffffff"/>
+  <circle cx="44" cy="20" r="4" fill="#0284c7"/>
+</svg>

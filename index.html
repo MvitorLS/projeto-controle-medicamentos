@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Controle de Medicamentos & Medições</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header & Menu de Navegação Global -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">💊</div>
+        <div class="brand-title">
+          MediControl
+          <small>Gestão de Saúde & Medicamentos</small>
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="index.html" class="active">Dashboard</a></li>
+          <li><a href="medicamentos.html">Medicamentos</a></li>
+          <li><a href="medicoes.html">Medições de Saúde</a></li>
+          <li><a href="relatorio.html">Relatório Médico</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Painel de Acompanhamento Diário</h1>
+        <p class="page-subtitle">Monitore os seus medicamentos programados e registros de métricas vitais.</p>
+      </div>
+      <div>
+        <a href="relatorio.html" class="btn btn-outline">🖨️ Exportar Relatório</a>
+      </div>
+    </div>
+
+    <!-- Cards de Resumo Estatístico -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue">💊</div>
+        <div>
+          <div id="stat-total-meds" class="stat-value">0</div>
+          <div class="stat-label">Medicamentos Cadastrados</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">⏰</div>
+        <div>
+          <div id="stat-pending-doses" class="stat-value">0</div>
+          <div class="stat-label">Doses Pendentes Hoje</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon green">📊</div>
+        <div>
+          <div id="stat-total-measures" class="stat-value">0</div>
+          <div class="stat-label">Registros de Saúde</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de Doses de Hoje e Últimas Medições -->
+    <div class="card-grid">
+      <!-- Seção: Doses Programadas de Hoje -->
+      <section class="card">
+        <div class="card-title">
+          <span>📋 Doses de Hoje</span>
+          <a href="medicamentos.html" class="btn btn-outline btn-sm">+ Novo Medicamento</a>
+        </div>
+        <div id="today-doses-list" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Renderizado via JS -->
+        </div>
+      </section>
+
+      <!-- Seção: Últimas Medições Registradas -->
+      <section class="card">
+        <div class="card-title">
+          <span>🩺 Últimas Medições</span>
+          <a href="medicoes.html" class="btn btn-primary btn-sm">+ Nova Medição</a>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="recent-measures-table">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>&copy; 2026 MediControl — Sistema de Controle de Medicamentos & Medições de Saúde. Autoria: Vitor.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

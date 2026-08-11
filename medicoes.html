@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medições de Saúde - Registro e Histórico</title>
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header & Menu de Navegação Global -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">💊</div>
+        <div class="brand-title">
+          MediControl
+          <small>Gestão de Saúde & Medicamentos</small>
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="medicamentos.html">Medicamentos</a></li>
+          <li><a href="medicoes.html" class="active">Medições de Saúde</a></li>
+          <li><a href="relatorio.html">Relatório Médico</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Registro de Medições de Saúde</h1>
+        <p class="page-subtitle">Acompanhe sua pressão arterial, glicemia, peso corporal e batimentos cardíacos.</p>
+      </div>
+    </div>
+
+    <!-- Card de Registro de Nova Medição -->
+    <section class="card" style="margin-bottom: 32px;">
+      <h2 class="card-title">Registrar Nova Medição</h2>
+      <form id="form-nova-medicao">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="measure-tipo">Tipo de Medição:</label>
+            <select id="measure-tipo">
+              <option value="Pressão Arterial">Pressão Arterial (ex: 120/80 mmHg)</option>
+              <option value="Glicemia">Glicemia em Jejum (mg/dL)</option>
+              <option value="Frequência Cardíaca">Frequência Cardíaca (bpm)</option>
+              <option value="Peso Corporal">Peso Corporal (kg)</option>
+              <option value="Temperatura">Temperatura Corporal (°C)</option>
+              <option value="Saturação de O2">Saturação de Oxigênio (SpO2 %)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="measure-valor">Valor Medido:</label>
+            <input type="text" id="measure-valor" placeholder="Ex: 120/80 ou 95 ou 75.5" required>
+          </div>
+
+          <div class="form-group">
+            <label for="measure-data">Data e Hora:</label>
+            <input type="datetime-local" id="measure-data">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">+ Registrar Medição</button>
+      </form>
+    </section>
+
+    <!-- Tabela de Histórico de Medições -->
+    <section class="card">
+      <h2 class="card-title">Histórico de Medições de Saúde</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo de Medição</th>
+              <th>Valor Registrado</th>
+              <th>Status</th>
+              <th>Data e Hora</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="table-measures-body">
+            <!-- Renderizado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>&copy; 2026 MediControl — Sistema de Controle de Medicamentos & Medições de Saúde. Autoria: Vitor.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>
