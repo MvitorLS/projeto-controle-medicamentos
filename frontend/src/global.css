@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image: url('/fundo1.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* Deixa os cards/containers com fundo semi-transparente
+   pra imagem não atrapalhar a leitura */
+.container {
+  background-color: rgb(255, 255, 255);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
