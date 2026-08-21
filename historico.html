@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SaúdeControl — Dashboard</title>
+  <title>SaúdeControl — Histórico de Doses</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,7 +40,7 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Principal</div>
-      <a href="index.html" class="nav-item active">
+      <a href="index.html" class="nav-item">
         <span class="icon"><i data-lucide="layout-grid" class="w-5 h-5"></i></span> Dashboard
       </a>
       <a href="medicamentos.html" class="nav-item">
@@ -53,7 +53,7 @@
         <span class="icon"><i data-lucide="line-chart" class="w-5 h-5"></i></span> Métricas de Saúde
       </a>
       <div class="nav-section-label">Histórico</div>
-      <a href="historico.html" class="nav-item">
+      <a href="historico.html" class="nav-item active">
         <span class="icon"><i data-lucide="calendar" class="w-5 h-5"></i></span> Histórico de Doses
       </a>
     </nav>
@@ -80,8 +80,8 @@
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
       <div class="topbar-title">
-        <h1>Dashboard</h1>
-        <p id="topbarDate">Carregando...</p>
+        <h1>Histórico de Doses & Aderência</h1>
+        <p>Acompanhe a taxa de cumprimento e o histórico diário de medicação</p>
       </div>
       <div class="topbar-actions">
         <!-- Theme Selector Widget -->
@@ -106,155 +106,79 @@
           </div>
         </div>
 
-        <button class="btn btn-primary" onclick="abrirModal('quickDoseModal'); carregarModalDoseRapida();">
-          <i data-lucide="check-circle-2" class="w-4 h-4"></i> Registrar Dose
-        </button>
+        <input type="month" id="monthFilter" class="form-control" style="width:170px" onchange="carregarHistorico()" />
       </div>
     </div>
 
     <div class="page-content">
 
-      <!-- STAT CARDS -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon blue">
-            <i data-lucide="pill" class="w-6 h-6"></i>
-          </div>
-          <div class="stat-info">
-            <div class="value" id="statMeds">0</div>
-            <div class="label">Medicamentos ativos</div>
-            <div class="trend up" id="statMedsTrend">Em tratamento</div>
-          </div>
-        </div>
-
+      <!-- Stats Overview -->
+      <div class="stats-grid mb-6">
         <div class="stat-card">
           <div class="stat-icon green">
             <i data-lucide="check-check" class="w-6 h-6"></i>
           </div>
           <div class="stat-info">
-            <div class="value" id="statDosesPct">0%</div>
-            <div class="label">Doses tomadas hoje</div>
-            <div class="trend" id="statDosesTrend">0 de 0</div>
+            <div class="value" id="statAdherencia">--%</div>
+            <div class="label">Aderência Geral</div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon red">
-            <i data-lucide="heart-pulse" class="w-6 h-6"></i>
+          <div class="stat-icon blue">
+            <i data-lucide="calendar-check" class="w-6 h-6"></i>
           </div>
           <div class="stat-info">
-            <div class="value" id="statPressao">--/--</div>
-            <div class="label">Pressão arterial</div>
-            <div class="trend" id="statPressaoLabel">Último registro</div>
+            <div class="value" id="statDias">0</div>
+            <div class="label">Dias Registrados</div>
           </div>
         </div>
 
         <div class="stat-card">
           <div class="stat-icon yellow">
-            <i data-lucide="scale" class="w-6 h-6"></i>
+            <i data-lucide="alert-circle" class="w-6 h-6"></i>
           </div>
           <div class="stat-info">
-            <div class="value" id="statPeso">-- kg</div>
-            <div class="label">Peso corporal</div>
-            <div class="trend" id="statPesoLabel">Último registro</div>
+            <div class="value" id="statFalhas">0</div>
+            <div class="label">Doses Pendentes / Falhas</div>
           </div>
         </div>
 
         <div class="stat-card">
           <div class="stat-icon purple">
-            <i data-lucide="droplet" class="w-6 h-6"></i>
+            <i data-lucide="pill" class="w-6 h-6"></i>
           </div>
           <div class="stat-info">
-            <div class="value" id="statGlicemia">-- mg/dL</div>
-            <div class="label">Glicemia</div>
-            <div class="trend" id="statGlicemiaLabel">Último registro</div>
+            <div class="value" id="statDosesTomadas">0</div>
+            <div class="label">Total Doses Tomadas</div>
           </div>
         </div>
       </div>
 
-      <!-- MIDDLE ROW -->
-      <div class="grid-2 mb-6">
-
-        <!-- Doses de hoje -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">
-              <i data-lucide="clock" class="w-5 h-5 text-sky-600"></i> Doses de Hoje
-            </span>
-            <a href="medicamentos.html" class="btn btn-ghost btn-sm flex items-center gap-1">
-              Ver todos <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-          </div>
-          <div class="card-body">
-            <div id="todayDosesList"></div>
-          </div>
+      <!-- Adherence Chart -->
+      <div class="card mb-6">
+        <div class="card-header">
+          <span class="card-title">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-sky-600"></i> Aderência Diária (%)
+          </span>
         </div>
-
-        <!-- Receitas recentes -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">
-              <i data-lucide="file-check" class="w-5 h-5 text-indigo-600"></i> Receitas Recentes
-            </span>
-            <a href="receitas.html" class="btn btn-ghost btn-sm flex items-center gap-1">
-              Ver todas <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </a>
-          </div>
-          <div class="card-body">
-            <div id="recentReceitas"></div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- CHARTS ROW -->
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">
-              <i data-lucide="heart" class="w-5 h-5 text-rose-500"></i> Pressão Arterial (últimos 7 dias)
-            </span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="height:220px">
-              <canvas id="chartPressao"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">
-              <i data-lucide="activity" class="w-5 h-5 text-amber-500"></i> Glicemia (últimos 7 dias)
-            </span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="height:220px">
-              <canvas id="chartGlicemia"></canvas>
-            </div>
-          </div>
+        <div class="card-body">
+          <div style="height:220px"><canvas id="chartAdherencia"></canvas></div>
         </div>
       </div>
 
-    </div>
-  </div>
+      <!-- Calendar List View -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <i data-lucide="list-checks" class="w-5 h-5 text-emerald-600"></i> Detalhamento de Doses por Dia
+          </span>
+        </div>
+        <div class="card-body">
+          <div id="historicoList"></div>
+        </div>
+      </div>
 
-  <!-- QUICK DOSE MODAL -->
-  <div class="modal-overlay" id="quickDoseModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="modal-title flex items-center gap-2">
-          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i> Registrar Dose Rápida
-        </h2>
-        <button class="modal-close" onclick="fecharModal('quickDoseModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Selecione os medicamentos que você já tomou hoje:</p>
-        <div id="quickDoseList"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="fecharModal('quickDoseModal')">Concluir</button>
-      </div>
     </div>
   </div>
 
@@ -263,7 +187,7 @@
 
   <!-- Scripts Modulares -->
   <script src="js/app.js"></script>
-  <script src="js/dashboard.js"></script>
+  <script src="js/historico.js"></script>
   <script>
     if (!sessionStorage.getItem("usuarioLogado")) {
       window.location.href = "login.html";

@@ -1,506 +1,347 @@
-/**
- * MediControl — Front-end
- * Toda persistência é feita via API REST (back-end Node.js + SQLite).
- * Não há mais localStorage.
- */
+// ===== 1. GERENCIADOR DE TEMAS DINÂMICOS =====
 
-(function () {
-  'use strict';
+function aplicarTema(tema) {
+    if (!tema) tema = 'light';
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('appTheme', tema);
 
-  const API = {
-    meds:     '/api/medicamentos',
-    medicoes: '/api/medicoes',
-  };
-
-  // Utilitário de fetch com JSON
-  async function api(url, options = {}) {
-    const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+    // Atualiza opções ativas no menu
+    const opcoes = document.querySelectorAll('.theme-option');
+    opcoes.forEach(op => {
+        if (op.getAttribute('data-theme-val') === tema) {
+            op.classList.add('active');
+        } else {
+            op.classList.remove('active');
+        }
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Erro HTTP ${res.status}`);
-    }
-    return res.json();
-  }
 
-  // ===========================================================================
-  // Dashboard
-  // ===========================================================================
-  async function initDashboard() {
-    const [meds, medicoes] = await Promise.all([
-      api(API.meds),
-      api(API.medicoes),
-    ]);
-
-    const totalMedsEl      = document.getElementById('stat-total-meds');
-    const pendingDosesEl   = document.getElementById('stat-pending-doses');
-    const totalMeasuresEl  = document.getElementById('stat-total-measures');
-
-    if (totalMedsEl)     totalMedsEl.textContent    = meds.length;
-    if (pendingDosesEl)  pendingDosesEl.textContent  = meds.filter(m => !m.tomada_hoje).length;
-    if (totalMeasuresEl) totalMeasuresEl.textContent = medicoes.length;
-
-    renderTodayDoses(meds);
-    renderRecentMeasures(medicoes);
-  }
-
-  function renderTodayDoses(meds) {
-    const container = document.getElementById('today-doses-list');
-    if (!container) return;
-
-    if (meds.length === 0) {
-      container.innerHTML = '<p class="text-muted">Nenhum medicamento cadastrado.</p>';
-      return;
+    // Atualiza ícone do botão
+    const iconEl = document.getElementById('themeIconCurrent');
+    if (iconEl) {
+        const iconesTema = {
+            light: 'sun',
+            dark: 'moon',
+            midnight: 'sparkles',
+            wellness: 'leaf'
+        };
+        iconEl.setAttribute('data-lucide', iconesTema[tema] || 'palette');
+        if (window.lucide) lucide.createIcons();
     }
 
-    container.innerHTML = '';
-    meds.forEach(med => {
-      const div = document.createElement('div');
-      div.className = 'stat-card';
-      div.style.justifyContent = 'space-between';
-      div.innerHTML = `
-        <div>
-          <div style="font-weight:800;font-size:16px;">${med.nome}
-            <span class="badge ${med.tomada_hoje ? 'badge-success' : 'badge-warning'}">
-              ${med.tomada_hoje ? 'Concluída' : 'Pendente'}
-            </span>
-          </div>
-          <div class="stat-label">Dosagem: ${med.dosagem} | Horário: <strong>${med.horario}</strong> (${med.frequencia})</div>
-          <div class="stat-label">Estoque restante: ${med.estoque} comprimidos</div>
+    // Se houver gráficos na tela, atualiza cores dos eixos
+    if (typeof reloadCharts === 'function') {
+        setTimeout(reloadCharts, 50);
+    }
+}
+
+function alternarMenuTema() {
+    const dropdown = document.getElementById('themeDropdownMenu');
+    if (dropdown) {
+        dropdown.classList.toggle('open');
+    }
+}
+
+// Fecha o menu de tema ao clicar fora
+document.addEventListener('click', function (e) {
+    const container = document.getElementById('themeContainer');
+    const dropdown = document.getElementById('themeDropdownMenu');
+    if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.remove('open');
+    }
+});
+
+function restaurarTema() {
+    const temaSalvo = localStorage.getItem('appTheme') || 'light';
+    aplicarTema(temaSalvo);
+}
+
+// Aplicação instantânea ao carregar
+restaurarTema();
+
+
+// ===== 2. SALVAR E BUSCAR DADOS NO NAVEGADOR =====
+
+function salvarDados(chave, valor) {
+    localStorage.setItem(chave, JSON.stringify(valor));
+}
+
+function buscarDados(chave, valorPadrao) {
+    let dados = localStorage.getItem(chave);
+    if (dados === null) {
+        return valorPadrao !== undefined ? valorPadrao : [];
+    }
+    try {
+        return JSON.parse(dados);
+    } catch (e) {
+        return valorPadrao !== undefined ? valorPadrao : [];
+    }
+}
+
+
+// ===== 3. MENSAGEM TEMPORÁRIA (TOAST COM ANIMAÇÃO) =====
+
+function mostrarMensagem(texto, tipo = 'success') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let mensagem = document.createElement('div');
+    mensagem.className = 'toast ' + tipo;
+
+    let icones = {
+        success: '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>',
+        error: '<i data-lucide="alert-circle" class="w-5 h-5 text-rose-500"></i>',
+        warning: '<i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>'
+    };
+
+    mensagem.innerHTML = `
+        <div class="flex items-center gap-3 w-full">
+            <span>${icones[tipo] || '<i data-lucide="info" class="w-5 h-5 text-sky-500"></i>'}</span>
+            <span class="flex-1 text-sm font-semibold">${texto}</span>
+            <button onclick="this.closest('.toast').remove()" class="text-slate-400 hover:text-slate-700 p-1 text-xs">✕</button>
         </div>
-        <div>
-          <button class="btn ${med.tomada_hoje ? 'btn-outline' : 'btn-success'}"
-                  data-action="toggle-dose" data-id="${med.id}">
-            ${med.tomada_hoje ? 'Desfazer' : '✓ Tomar Dose'}
-          </button>
-        </div>
-      `;
-      container.appendChild(div);
-    });
+    `;
 
-    container.querySelectorAll('[data-action="toggle-dose"]').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        const id = e.target.getAttribute('data-id');
-        await api(`${API.meds}/${id}/dose`, { method: 'PUT' });
-        initDashboard();
-        renderMedsTable();
-      });
-    });
-  }
+    container.appendChild(mensagem);
+    if (window.lucide) lucide.createIcons();
 
-  function renderRecentMeasures(medicoes) {
-    const container = document.getElementById('recent-measures-table');
-    if (!container) return;
-
-    if (medicoes.length === 0) {
-      container.innerHTML = '<tr><td colspan="4">Nenhuma medição registrada.</td></tr>';
-      return;
-    }
-
-    container.innerHTML = '';
-    medicoes.slice(0, 5).forEach(m => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${m.tipo}</strong></td>
-        <td>${m.valor}</td>
-        <td><span class="badge badge-success">${m.status}</span></td>
-        <td>${m.data}</td>
-      `;
-      container.appendChild(tr);
-    });
-  }
-
-  // ===========================================================================
-  // Medicamentos
-  // ===========================================================================
-  async function initMedsForm() {
-    await renderMedsTable();
-
-    const form = document.getElementById('form-novo-medicamento');
-    if (!form) return;
-
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const payload = {
-        nome:      document.getElementById('med-nome').value.trim(),
-        dosagem:   document.getElementById('med-dosagem').value.trim(),
-        horario:   document.getElementById('med-horario').value,
-        frequencia:document.getElementById('med-frequencia').value,
-        estoque:   parseInt(document.getElementById('med-estoque').value) || 30,
-      };
-      if (!payload.nome || !payload.dosagem || !payload.horario) return;
-
-      await api(API.meds, { method: 'POST', body: payload });
-      form.reset();
-      await renderMedsTable();
-      initDashboard();
-    });
-  }
-
-  async function renderMedsTable() {
-    const tableBody = document.getElementById('table-meds-body');
-    if (!tableBody) return;
-
-    const meds = await api(API.meds);
-
-    if (meds.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="6">Nenhum medicamento cadastrado.</td></tr>';
-      return;
-    }
-
-    tableBody.innerHTML = '';
-    meds.forEach(med => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${med.nome}</strong></td>
-        <td>${med.dosagem}</td>
-        <td>${med.horario}</td>
-        <td>${med.frequencia}</td>
-        <td><span class="badge ${med.estoque < 10 ? 'badge-danger' : 'badge-success'}">${med.estoque} un</span></td>
-        <td>
-          <button class="btn btn-danger btn-sm" data-delete-med="${med.id}">Excluir</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
-
-    tableBody.querySelectorAll('[data-delete-med]').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        const id = e.target.getAttribute('data-delete-med');
-        await api(`${API.meds}/${id}`, { method: 'DELETE' });
-        await renderMedsTable();
-        initDashboard();
-      });
-    });
-  }
-
-  // ===========================================================================
-  // Medições de Saúde
-  // ===========================================================================
-  async function initMeasuresForm() {
-    await renderMeasuresTable();
-
-    const form = document.getElementById('form-nova-medicao');
-    if (!form) return;
-
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const payload = {
-        tipo:  document.getElementById('measure-tipo').value,
-        valor: document.getElementById('measure-valor').value.trim(),
-        data:  document.getElementById('measure-data').value || undefined,
-      };
-      if (!payload.valor) return;
-
-      await api(API.medicoes, { method: 'POST', body: payload });
-      form.reset();
-      await renderMeasuresTable();
-      initDashboard();
-    });
-  }
-
-  async function renderMeasuresTable() {
-    const tableBody = document.getElementById('table-measures-body');
-    if (!tableBody) return;
-
-    const medicoes = await api(API.medicoes);
-
-    if (medicoes.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="5">Nenhuma medição registrada.</td></tr>';
-      return;
-    }
-
-    tableBody.innerHTML = '';
-    medicoes.forEach(m => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${m.tipo}</strong></td>
-        <td>${m.valor}</td>
-        <td><span class="badge badge-success">${m.status}</span></td>
-        <td>${m.data}</td>
-        <td>
-          <button class="btn btn-danger btn-sm" data-delete-measure="${m.id}">Excluir</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
-
-    tableBody.querySelectorAll('[data-delete-measure]').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        const id = e.target.getAttribute('data-delete-measure');
-        await api(`${API.medicoes}/${id}`, { method: 'DELETE' });
-        await renderMeasuresTable();
-        initDashboard();
-      });
-    });
-  }
-
-  // ===========================================================================
-  // Relatório — preenche tabelas com dados da API
-  // ===========================================================================
-  async function initRelatorio() {
-    const medsBody     = document.getElementById('table-meds-body');
-    const measuresBody = document.getElementById('table-measures-body');
-
-    if (medsBody) {
-      const meds = await api(API.meds);
-      medsBody.innerHTML = '';
-      meds.forEach(med => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${med.nome}</td>
-          <td>${med.dosagem}</td>
-          <td>${med.horario}</td>
-          <td>${med.frequencia}</td>
-          <td>${med.estoque} comprimidos</td>
-        `;
-        medsBody.appendChild(tr);
-      });
-    }
-
-    if (measuresBody) {
-      const medicoes = await api(API.medicoes);
-      measuresBody.innerHTML = '';
-      medicoes.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${m.tipo}</td>
-          <td>${m.valor}</td>
-          <td>${m.status}</td>
-          <td>${m.data}</td>
-        `;
-        measuresBody.appendChild(tr);
-      });
-    }
-
-    // Atualiza a data de emissão dinamicamente
-    const dataEmissaoEl = document.getElementById('data-emissao');
-    if (dataEmissaoEl) {
-      dataEmissaoEl.textContent = new Date().toLocaleDateString('pt-BR');
-    }
-  }
-
-  // ===========================================================================
-  // Scanner de Receita
-  // ===========================================================================
-  function initScanner() {
-    const drop      = document.getElementById('scanner-drop');
-    if (!drop) return;
-
-    const input          = document.getElementById('scanner-input');
-    const browse         = document.getElementById('scanner-browse');
-    const progressEl     = document.getElementById('scanner-progress');
-    const progressFill   = document.getElementById('progress-fill');
-    const progressLabel  = document.getElementById('progress-label');
-    const resultsEl      = document.getElementById('scanner-results');
-    const resultsList    = document.getElementById('scanner-meds-list');
-    const resultTitle    = document.getElementById('scanner-results-title');
-    const btnAdd         = document.getElementById('btn-add-scanned');
-    const resetBtn       = document.getElementById('scanner-reset');
-    const errorEl        = document.getElementById('scanner-error');
-    const errorMsg       = document.getElementById('scanner-error-msg');
-    const errorReset     = document.getElementById('scanner-error-reset');
-
-    // Abre seletor ao clicar na zona ou no link
-    drop.addEventListener('click', () => input.click());
-    browse.addEventListener('click', e => { e.stopPropagation(); input.click(); });
-    input.addEventListener('change', () => { if (input.files[0]) processFile(input.files[0]); });
-
-    // Drag & Drop
-    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
-    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-    drop.addEventListener('drop', e => {
-      e.preventDefault();
-      drop.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file) processFile(file);
-    });
-
-    // Resetar
-    [resetBtn, errorReset].forEach(btn => btn && btn.addEventListener('click', resetScanner));
-
-    function resetScanner() {
-      drop.classList.remove('hidden');
-      progressEl.classList.add('hidden');
-      resultsEl.classList.add('hidden');
-      errorEl.classList.add('hidden');
-      progressFill.style.width = '0%';
-      input.value = '';
-    }
-
-    function showError(msg) {
-      drop.classList.add('hidden');
-      progressEl.classList.add('hidden');
-      resultsEl.classList.add('hidden');
-      errorEl.classList.remove('hidden');
-      errorMsg.textContent = '⚠️ ' + msg;
-    }
-
-    async function processFile(file) {
-      const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-      if (!ALLOWED.includes(file.type)) {
-        return showError('Formato inválido. Use JPG, PNG, WEBP ou PDF.');
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        return showError('Arquivo muito grande. Máximo permitido: 10MB.');
-      }
-
-      // Mostra progresso
-      drop.classList.add('hidden');
-      errorEl.classList.add('hidden');
-      resultsEl.classList.add('hidden');
-      progressEl.classList.remove('hidden');
-
-      const isPdf = file.type === 'application/pdf';
-      const steps = [
-        { pct: 20, label: 'Enviando arquivo...' },
-        { pct: 50, label: isPdf ? 'Extraindo texto do PDF...' : 'Realizando OCR na imagem...' },
-        { pct: 80, label: 'Identificando medicamentos...' },
-      ];
-
-      let stepIdx = 0;
-      const stepTimer = setInterval(() => {
-        if (stepIdx < steps.length) {
-          progressFill.style.width = steps[stepIdx].pct + '%';
-          progressLabel.textContent = steps[stepIdx].label;
-          stepIdx++;
-        }
-      }, 800);
-
-      try {
-        const formData = new FormData();
-        formData.append('receita', file);
-
-        const res = await fetch('/api/scanner', { method: 'POST', body: formData });
-        clearInterval(stepTimer);
-
-        progressFill.style.width = '100%';
-        progressLabel.textContent = 'Concluído!';
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          return showError(err.error || 'Erro ao processar o arquivo.');
-        }
-
-        const { medicamentos } = await res.json();
-
-        await new Promise(r => setTimeout(r, 400)); // breve pausa visual
-        progressEl.classList.add('hidden');
-
-        if (!medicamentos || medicamentos.length === 0) {
-          return showError('Nenhum medicamento identificado. Tente uma imagem mais nítida ou cadastre manualmente.');
-        }
-
-        renderScanResults(medicamentos);
-      } catch (err) {
-        clearInterval(stepTimer);
-        showError('Falha na conexão com o servidor.');
-      }
-    }
-
-    function renderScanResults(meds) {
-      resultTitle.textContent = `${meds.length} medicamento${meds.length > 1 ? 's' : ''} encontrado${meds.length > 1 ? 's' : ''}`;
-      resultsList.innerHTML = '';
-
-      meds.forEach((med, idx) => {
-        const card = document.createElement('div');
-        card.className = 'scanner-med-card selected';
-        card.innerHTML = `
-          <input type="checkbox" class="scanner-check" id="check-${idx}" checked>
-          <div class="scanner-med-fields">
-            <div class="form-group">
-              <label for="s-nome-${idx}">Medicamento</label>
-              <input type="text" id="s-nome-${idx}" value="${med.nome}">
-            </div>
-            <div class="form-group">
-              <label for="s-dosagem-${idx}">Dosagem</label>
-              <input type="text" id="s-dosagem-${idx}" value="${med.dosagem}">
-            </div>
-            <div class="form-group">
-              <label for="s-horario-${idx}">Horário</label>
-              <input type="time" id="s-horario-${idx}" value="${med.horario}">
-            </div>
-            <div class="form-group">
-              <label for="s-freq-${idx}">Frequência</label>
-              <select id="s-freq-${idx}">
-                <option value="1x ao dia" ${med.frequencia === '1x ao dia' ? 'selected' : ''}>1x ao dia</option>
-                <option value="2x ao dia (12 em 12h)" ${med.frequencia.includes('12') ? 'selected' : ''}>2x ao dia (12 em 12h)</option>
-                <option value="3x ao dia (8 em 8h)" ${med.frequencia.includes('8 em 8') ? 'selected' : ''}>3x ao dia (8 em 8h)</option>
-                <option value="Uso Contínuo / Conforme Necessário" ${med.frequencia.includes('Contínuo') ? 'selected' : ''}>Uso Contínuo</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="s-estoque-${idx}">Estoque (un.)</label>
-              <input type="number" id="s-estoque-${idx}" value="${med.estoque}" min="1">
-            </div>
-          </div>
-        `;
-
-        // Checkbox atualiza classe visual
-        const chk = card.querySelector('.scanner-check');
-        chk.addEventListener('change', () => card.classList.toggle('selected', chk.checked));
-
-        resultsList.appendChild(card);
-      });
-
-      resultsEl.classList.remove('hidden');
-
-      // Botão de cadastrar selecionados
-      btnAdd.onclick = async () => {
-        const cards = resultsList.querySelectorAll('.scanner-med-card');
-        const selecionados = [];
-
-        cards.forEach((card, idx) => {
-          const chk = card.querySelector('.scanner-check');
-          if (!chk.checked) return;
-          selecionados.push({
-            nome:       document.getElementById(`s-nome-${idx}`).value.trim(),
-            dosagem:    document.getElementById(`s-dosagem-${idx}`).value.trim(),
-            horario:    document.getElementById(`s-horario-${idx}`).value,
-            frequencia: document.getElementById(`s-freq-${idx}`).value,
-            estoque:    parseInt(document.getElementById(`s-estoque-${idx}`).value) || 30,
-          });
+    if (window.gsap) {
+        gsap.from(mensagem, {
+            y: 20,
+            opacity: 0,
+            duration: 0.35,
+            ease: 'back.out(1.5)'
         });
+    }
 
-        if (selecionados.length === 0) return;
-
-        btnAdd.disabled = true;
-        btnAdd.textContent = 'Cadastrando...';
-
-        for (const med of selecionados) {
-          await api(API.meds, { method: 'POST', body: med });
+    setTimeout(function () {
+        if (window.gsap) {
+            gsap.to(mensagem, {
+                opacity: 0,
+                y: 15,
+                duration: 0.25,
+                ease: 'power2.in',
+                onComplete: () => mensagem.remove()
+            });
+        } else {
+            mensagem.remove();
         }
+    }, 3800);
+}
 
-        await renderMedsTable();
-        initDashboard();
-        resetScanner();
-        btnAdd.disabled = false;
-        btnAdd.textContent = '+ Cadastrar Selecionados';
 
-        // Destaca a tabela de medicamentos
-        const table = document.getElementById('table-meds-body');
-        if (table) table.closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      };
+// ===== 4. MODAL =====
+
+function abrirModal(id) {
+    let modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('open');
+        const modalBox = modal.querySelector('.modal');
+        if (modalBox && window.gsap) {
+            gsap.fromTo(modalBox,
+                { scale: 0.94, y: 20, opacity: 0 },
+                { scale: 1, y: 0, opacity: 1, duration: 0.3, ease: 'back.out(1.4)' }
+            );
+        }
     }
-  }
+}
 
-  // ===========================================================================
-  // Bootstrap — detecta a página atual e inicializa o módulo correto
-  // ===========================================================================
-  document.addEventListener('DOMContentLoaded', () => {
-    const page = window.location.pathname;
+function fecharModal(id) {
+    let modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('open');
+    }
+}
 
-    if (page === '/' || page.includes('index')) {
-      initDashboard();
+document.addEventListener('click', function (evento) {
+    if (evento.target.classList.contains('modal-overlay')) {
+        evento.target.classList.remove('open');
+    }
+});
+
+
+// ===== 5. ABAS =====
+
+function iniciarAbas() {
+    let botoes = document.querySelectorAll('.tab-btn');
+
+    botoes.forEach(function (botao) {
+        botao.addEventListener('click', function () {
+            let grupo = botao.closest('[data-tabs]');
+            if (!grupo) return;
+            let alvo = botao.dataset.tab;
+
+            grupo.querySelectorAll('.tab-btn').forEach(function (b) {
+                b.classList.remove('active');
+            });
+
+            grupo.querySelectorAll('.tab-content').forEach(function (c) {
+                c.classList.remove('active');
+            });
+
+            botao.classList.add('active');
+
+            let conteudo = grupo.querySelector('#' + alvo);
+            if (conteudo) {
+                conteudo.classList.add('active');
+            }
+        });
+    });
+}
+
+
+// ===== 6. DATA E HORA =====
+
+function dataDeHoje() {
+    let data = new Date();
+    return data.toISOString().split('T')[0];
+}
+
+function formatarData(data) {
+    if (!data) return '-';
+    let partes = data.split('-');
+    if (partes.length < 3) return data;
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+function formatarDataHora(data) {
+    if (!data) return '-';
+    let d = new Date(data);
+    if (isNaN(d.getTime())) return data;
+    return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
+// ===== 7. FREQUÊNCIA DOS MEDICAMENTOS =====
+
+function traduzirFrequencia(frequencia) {
+    if (frequencia === 'daily') return 'Diário (1x)';
+    if (frequencia === 'twice') return '2x ao dia';
+    if (frequencia === 'three') return '3x ao dia';
+    if (frequencia === 'four') return '4x ao dia';
+    if (frequencia === 'weekly') return 'Semanal';
+    if (frequencia === 'biweekly') return 'Quinzenal';
+    if (frequencia === 'monthly') return 'Mensal';
+    if (frequencia === 'sos') return 'S.O.S. (quando necessário)';
+    return frequencia;
+}
+
+
+// ===== 8. ID ALEATÓRIO =====
+
+function gerarId() {
+    return Math.random().toString(36).slice(2, 10);
+}
+
+
+// ===== 9. MENU DE NAVEGAÇÃO =====
+
+function destacarMenuAtivo() {
+    let paginaAtual = location.pathname.split('/').pop() || 'index.html';
+
+    let links = document.querySelectorAll('.nav-item');
+    links.forEach(function (link) {
+        let href = link.getAttribute('href');
+        if (href === paginaAtual) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+
+// ===== 10. DOSES DO DIA =====
+
+function medicamentosDeHoje() {
+    let remedios = buscarDados('medications', []);
+    let hoje = dataDeHoje();
+    let tomados = buscarDados('doses_' + hoje, {});
+
+    let lista = [];
+
+    for (let i = 0; i < remedios.length; i++) {
+        let remedio = { ...remedios[i] };
+        remedio.done = !!tomados[remedio.id];
+        lista.push(remedio);
     }
 
-    initMedsForm();
-    initMeasuresForm();
-    initScanner();
-    initRelatorio();
-  });
+    return lista;
+}
 
-})();
+function marcarDose(idRemedio) {
+    let hoje = dataDeHoje();
+    let chave = 'doses_' + hoje;
+    let tomados = buscarDados(chave, {});
+
+    tomados[idRemedio] = !tomados[idRemedio];
+    salvarDados(chave, tomados);
+
+    return tomados[idRemedio];
+}
+
+
+// ===== 11. SESSÃO / LOGIN =====
+
+function sairDaConta() {
+    sessionStorage.removeItem('usuarioLogado');
+    window.location.href = 'login.html';
+}
+
+function pegarUsuarioLogado() {
+    let dados = sessionStorage.getItem('usuarioLogado');
+    if (!dados) return null;
+    return JSON.parse(dados);
+}
+
+
+// ===== 12. SIDEBAR TOGGLE =====
+
+function alternarSidebar() {
+    document.body.classList.toggle('sidebar-fechada');
+
+    let estado = document.body.classList.contains('sidebar-fechada') ? 'fechada' : 'aberta';
+    localStorage.setItem('sidebar', estado);
+}
+
+function restaurarEstadoSidebar() {
+    let estadoSalvo = localStorage.getItem('sidebar');
+    if (estadoSalvo === 'fechada') {
+        document.body.classList.add('sidebar-fechada');
+    }
+}
+
+
+// ===== 13. INICIALIZAÇÃO NO DOM =====
+
+document.addEventListener('DOMContentLoaded', function () {
+    restaurarTema();
+    iniciarAbas();
+    destacarMenuAtivo();
+    restaurarEstadoSidebar();
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
+    const user = pegarUsuarioLogado();
+    const nameEl = document.getElementById('sidebarName');
+    if (nameEl) {
+        nameEl.textContent = user?.nome || localStorage.getItem('userName') || 'Usuário';
+    }
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl && (user?.nome || localStorage.getItem('userName'))) {
+        const n = user?.nome || localStorage.getItem('userName');
+        avatarEl.textContent = n.charAt(0).toUpperCase();
+    }
+});

@@ -1,158 +1,252 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="scroll-smooth">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Medicamentos - Gestão e Cadastro</title>
-  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaúdeControl — Medicamentos</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- GSAP 3 + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-  <!-- Header & Menu de Navegação Global -->
-  <header>
-    <div class="header-inner">
-      <a href="index.html" class="brand">
-        <div class="brand-icon">💊</div>
-        <div class="brand-title">
-          MediControl
-          <small>Gestão de Saúde & Medicamentos</small>
-        </div>
+  <div class="bg-ambient"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <i data-lucide="activity" class="w-6 h-6"></i>
+      </div>
+      <div class="brand-text">
+        <h2>SaúdeControl</h2>
+        <span>Monitoramento Pessoal</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a href="index.html" class="nav-item">
+        <span class="icon"><i data-lucide="layout-grid" class="w-5 h-5"></i></span> Dashboard
       </a>
-
-      <nav>
-        <ul>
-          <li><a href="index.html">Dashboard</a></li>
-          <li><a href="medicamentos.html" class="active">Medicamentos</a></li>
-          <li><a href="medicoes.html">Medições de Saúde</a></li>
-          <li><a href="relatorio.html">Relatório Médico</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Conteúdo Principal -->
-  <main>
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Gestão de Medicamentos</h1>
-        <p class="page-subtitle">Cadastre seus remédios, defina horários de uso e controle o estoque de pílulas.</p>
-      </div>
-    </div>
-
-    <!-- Card: Scanner de Receita -->
-    <section class="card scanner-card" id="scanner-section" style="margin-bottom: 32px;">
-      <div class="card-title">
-        <span>🔍 Escanear Receita Médica</span>
-        <span class="badge badge-success">NOVO</span>
-      </div>
-      <p class="scanner-desc">Envie uma foto ou PDF da receita e o sistema preencherá os medicamentos automaticamente.</p>
-
-      <!-- Zona de Drop -->
-      <div class="scanner-drop" id="scanner-drop">
-        <input type="file" id="scanner-input" accept="image/jpeg,image/png,image/webp,application/pdf" hidden>
-        <div class="scanner-drop-icon" id="scanner-drop-icon">📄</div>
-        <p class="scanner-drop-label">Arraste a receita aqui ou <button class="scanner-link" id="scanner-browse">selecione o arquivo</button></p>
-        <p class="scanner-drop-hint">PDF (teleconsulta) · JPG · PNG &nbsp;·&nbsp; Máx. 10MB</p>
-      </div>
-
-      <!-- Progresso -->
-      <div class="scanner-progress hidden" id="scanner-progress">
-        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-        <p class="progress-label" id="progress-label">Enviando arquivo...</p>
-      </div>
-
-      <!-- Resultados -->
-      <div class="scanner-results hidden" id="scanner-results">
-        <div class="scanner-results-header">
-          <span id="scanner-results-title">Medicamentos encontrados</span>
-          <button class="scanner-link" id="scanner-reset">↩ Nova receita</button>
-        </div>
-        <div id="scanner-meds-list"></div>
-        <div class="scanner-actions">
-          <button class="btn btn-primary" id="btn-add-scanned">+ Cadastrar Selecionados</button>
+      <a href="medicamentos.html" class="nav-item active">
+        <span class="icon"><i data-lucide="pill" class="w-5 h-5"></i></span> Medicamentos
+      </a>
+      <a href="receitas.html" class="nav-item">
+        <span class="icon"><i data-lucide="file-text" class="w-5 h-5"></i></span> Receitas Médicas
+      </a>
+      <a href="metricas.html" class="nav-item">
+        <span class="icon"><i data-lucide="line-chart" class="w-5 h-5"></i></span> Métricas de Saúde
+      </a>
+      <div class="nav-section-label">Histórico</div>
+      <a href="historico.html" class="nav-item">
+        <span class="icon"><i data-lucide="calendar" class="w-5 h-5"></i></span> Histórico de Doses
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-info">
+          <small>Bem-vindo,</small>
+          <strong id="sidebarName">Usuário</strong>
         </div>
       </div>
+    </div>
+    <div style="padding: 12px 16px; border-top: 1px solid var(--border-subtle);">
+      <button onclick="sairDaConta()" class="btn btn-secondary w-full justify-center flex items-center gap-2">
+        <i data-lucide="log-out" class="w-4 h-4 text-rose-500"></i> Sair da Conta
+      </button>
+    </div>
+  </aside>
 
-      <!-- Erro -->
-      <div class="scanner-error hidden" id="scanner-error">
-        <span id="scanner-error-msg"></span>
-        <button class="scanner-link" id="scanner-error-reset">Tentar novamente</button>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="btn-toggle-sidebar" onclick="alternarSidebar()" title="Mostrar/esconder menu">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+      <div class="topbar-title">
+        <h1>Medicamentos</h1>
+        <p>Gerencie seus medicamentos diários com lembretes e horários</p>
       </div>
-    </section>
+      <div class="topbar-actions">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchMed" class="form-control pl-9" placeholder="Buscar medicamento..." style="width:200px" oninput="renderizarMedicamentos()" />
+        </div>
 
-    <!-- Card de Cadastro de Novo Medicamento -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2 class="card-title">Cadastrar Novo Medicamento</h2>
-      <form id="form-novo-medicamento">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="med-nome">Nome do Medicamento:</label>
-            <input type="text" id="med-nome" placeholder="Ex: Losartana Potássica" required>
+        <!-- Theme Selector Widget -->
+        <div class="theme-menu-container" id="themeContainer">
+          <button class="btn-icon" onclick="alternarMenuTema()" title="Escolher Tema Visual">
+            <i data-lucide="sun" id="themeIconCurrent" class="w-5 h-5"></i>
+          </button>
+          <div class="theme-dropdown" id="themeDropdownMenu">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);padding:6px 10px 4px;">Tema da Interface</div>
+            <button class="theme-option" data-theme-val="light" onclick="aplicarTema('light'); alternarMenuTema();">
+              <span><span class="theme-badge-dot" style="background:#0284c7"></span>☀️ Claro (Apple)</span>
+            </button>
+            <button class="theme-option" data-theme-val="dark" onclick="aplicarTema('dark'); alternarMenuTema();">
+              <span><span class="theme-badge-dot" style="background:#38bdf8"></span>🌙 Escuro (Linear)</span>
+            </button>
+            <button class="theme-option" data-theme-val="midnight" onclick="aplicarTema('midnight'); alternarMenuTema();">
+              <span><span class="theme-badge-dot" style="background:#a855f7"></span>🌌 Meia-Noite (OLED)</span>
+            </button>
+            <button class="theme-option" data-theme-val="wellness" onclick="aplicarTema('wellness'); alternarMenuTema();">
+              <span><span class="theme-badge-dot" style="background:#10b981"></span>🌿 Menta (Wellness)</span>
+            </button>
           </div>
+        </div>
 
+        <button class="btn btn-primary flex items-center gap-2" onclick="abrirModalAdicao()">
+          <i data-lucide="plus" class="w-4 h-4"></i> Novo Medicamento
+        </button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- Filters -->
+      <div class="flex items-center gap-2 mb-6 flex-wrap">
+        <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all" onclick="definirFiltro('all', this)">Todos</button>
+        <button class="btn btn-sm btn-secondary filter-btn" data-filter="daily" onclick="definirFiltro('daily', this)">Diários</button>
+        <button class="btn btn-sm btn-secondary filter-btn" data-filter="sos" onclick="definirFiltro('sos', this)">S.O.S.</button>
+        <button class="btn btn-sm btn-secondary filter-btn" data-filter="active" onclick="definirFiltro('active', this)">Ativos</button>
+        <button class="btn btn-sm btn-secondary filter-btn" data-filter="inactive" onclick="definirFiltro('inactive', this)">Inativos</button>
+      </div>
+
+      <!-- Meds Grid -->
+      <div id="medsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;"></div>
+
+    </div>
+  </div>
+
+  <!-- ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="medModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title flex items-center gap-2" id="medModalTitle">
+          <i data-lucide="pill" class="w-5 h-5 text-sky-600"></i> Novo Medicamento
+        </h2>
+        <button class="modal-close" onclick="fecharModal('medModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="medId" />
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="med-dosagem">Dosagem:</label>
-            <input type="text" id="med-dosagem" placeholder="Ex: 50mg ou 10ml" required>
+            <label class="form-label">Nome do medicamento *</label>
+            <input type="text" id="medName" class="form-control" placeholder="Ex: Losartana Potássica" required />
           </div>
-
           <div class="form-group">
-            <label for="med-horario">Horário do Dose:</label>
-            <input type="time" id="med-horario" required>
+            <label class="form-label">Dosagem *</label>
+            <input type="text" id="medDosage" class="form-control" placeholder="Ex: 50mg" required />
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="form-group">
-            <label for="med-frequencia">Frequência:</label>
-            <select id="med-frequencia">
-              <option value="1x ao dia">1x ao dia (Diário)</option>
-              <option value="2x ao dia (12 em 12h)">2x ao dia (12 em 12h)</option>
-              <option value="3x ao dia (8 em 8h)">3x ao dia (8 em 8h)</option>
-              <option value="Uso Contínuo / Conforme Necessário">Uso Contínuo / Conforme Necessário</option>
+            <label class="form-label">Forma farmacêutica</label>
+            <select id="medForm" class="form-control">
+              <option value="comprimido">💊 Comprimido</option>
+              <option value="capsula">🟡 Cápsula</option>
+              <option value="xarope">🥤 Xarope</option>
+              <option value="injecao">💉 Injeção</option>
+              <option value="gotas">💧 Gotas</option>
+              <option value="pomada">🪴 Pomada</option>
+              <option value="outro">🧭 Outro</option>
             </select>
           </div>
-
           <div class="form-group">
-            <label for="med-estoque">Estoque Inicial (comprimidos):</label>
-            <input type="number" id="med-estoque" min="1" value="30">
+            <label class="form-label">Frequência</label>
+            <select id="medFreq" class="form-control" onchange="atualizarCamposHorarios()">
+              <option value="daily">Diário (1x)</option>
+              <option value="twice">2x ao dia</option>
+              <option value="three">3x ao dia</option>
+              <option value="four">4x ao dia</option>
+              <option value="weekly">Semanal</option>
+              <option value="biweekly">Quinzenal</option>
+              <option value="monthly">Mensal</option>
+              <option value="sos">S.O.S. (quando necessário)</option>
+            </select>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">+ Cadastrar Medicamento</button>
-      </form>
-    </section>
+        <div class="form-group">
+          <label class="form-label">Horário(s) de uso</label>
+          <div id="timesFields" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+        </div>
 
-    <!-- Tabela de Medicamentos Cadastrados -->
-    <section class="card">
-      <h2 class="card-title">Seus Medicamentos Cadastrados</h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Dosagem</th>
-              <th>Horário</th>
-              <th>Frequência</th>
-              <th>Estoque</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="table-meds-body">
-            <!-- Renderizado via JS -->
-          </tbody>
-        </table>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Data de início</label>
+            <input type="date" id="medStart" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de fim (opcional)</label>
+            <input type="date" id="medEnd" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observações & Instruções</label>
+          <textarea id="medNotes" class="form-control" rows="2" placeholder="Tomar em jejum, com água abundante..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
+            <input type="checkbox" id="medActive" checked class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500" />
+            Medicamento em uso ativo
+          </label>
+        </div>
       </div>
-    </section>
-  </main>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModal('medModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarMedicamento()">Salvar Medicamento</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Rodapé -->
-  <footer>
-    <p>&copy; 2026 MediControl — Sistema de Controle de Medicamentos & Medições de Saúde. Autoria: Vitor.</p>
-  </footer>
+  <!-- DELETE CONFIRM -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <h2 class="modal-title flex items-center gap-2 text-rose-600">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i> Excluir Medicamento
+        </h2>
+        <button class="modal-close" onclick="fecharModal('deleteModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-slate-600">Tem certeza que deseja excluir <strong id="deletemedName" class="text-slate-900"></strong>?</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px">Esta ação removerá este medicamento do cronograma.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModal('deleteModal')">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmarExclusao()">Excluir Definitivamente</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Scripts -->
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts Modulares -->
   <script src="js/app.js"></script>
+  <script src="js/medicamentos.js"></script>
+  <script>
+    if (!sessionStorage.getItem("usuarioLogado")) {
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
