@@ -48,7 +48,7 @@ router.post('/', upload.single('receita'), async (req, res) => {
   } catch (err) {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     console.error('[Scanner]', err.message);
-    res.status(500).json({ error: 'Erro ao processar o arquivo: ' + err.message });
+    res.status(500).json({ error: 'Erro ao processar o arquivo. Certifique-se de que é um arquivo legível.' });
   }
 });
 

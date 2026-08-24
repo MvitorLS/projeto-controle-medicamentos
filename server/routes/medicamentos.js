@@ -16,45 +16,82 @@ const resetDoses  = db.prepare('UPDATE medicamentos SET tomada_hoje = 0');
 
 // GET /api/medicamentos
 router.get('/', (req, res) => {
-  const rows = getAll.all();
-  res.json(rows.map(r => ({ ...r, tomada_hoje: r.tomada_hoje === 1 })));
+  try {
+    const rows = getAll.all();
+    res.json(rows.map(r => ({ ...r, tomada_hoje: r.tomada_hoje === 1 })));
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao buscar medicamentos.' });
+  }
 });
 
 // POST /api/medicamentos
 router.post('/', (req, res) => {
-  const { nome, dosagem, horario, frequencia = '1x ao dia', estoque = 30 } = req.body;
-  if (!nome || !dosagem || !horario) {
-    return res.status(400).json({ error: 'Campos nome, dosagem e horario são obrigatórios.' });
+  try {
+    let { nome, dosagem, horario, frequencia = '1x ao dia', estoque = 30 } = req.body;
+    if (!nome || !dosagem || !horario) {
+      return res.status(400).json({ error: 'Campos nome, dosagem e horario são obrigatórios.' });
+    }
+
+    const estoqueNum = Math.max(0, parseInt(estoque, 10) || 0);
+
+    const info = insert.run({
+      nome: String(nome).trim(),
+      dosagem: String(dosagem).trim(),
+      horario: String(horario).trim(),
+      frequencia: String(frequencia).trim(),
+      estoque: estoqueNum,
+      tomada_hoje: 0
+    });
+
+    res.status(201).json(getOne.get(info.lastInsertRowid));
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao cadastrar medicamento.' });
   }
-  const info = insert.run({ nome, dosagem, horario, frequencia, estoque: parseInt(estoque), tomada_hoje: 0 });
-  res.status(201).json(getOne.get(info.lastInsertRowid));
 });
 
 // PUT /api/medicamentos/:id/dose — marca/desmarca dose do dia
 router.put('/:id/dose', (req, res) => {
-  const med = getOne.get(req.params.id);
-  if (!med) return res.status(404).json({ error: 'Medicamento não encontrado.' });
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ error: 'ID inválido.' });
 
-  const tomadaAtual = med.tomada_hoje === 1;
-  const novaTomada  = !tomadaAtual;
-  const novoEstoque = novaTomada && med.estoque > 0 ? med.estoque - 1 : med.estoque;
+    const med = getOne.get(id);
+    if (!med) return res.status(404).json({ error: 'Medicamento não encontrado.' });
 
-  toggleDose.run({ tomada_hoje: novaTomada ? 1 : 0, estoque: novoEstoque }, med.id);
-  const updated = getOne.get(med.id);
-  res.json({ ...updated, tomada_hoje: updated.tomada_hoje === 1 });
+    const tomadaAtual = med.tomada_hoje === 1;
+    const novaTomada  = !tomadaAtual;
+    const novoEstoque = novaTomada && med.estoque > 0 ? med.estoque - 1 : med.estoque;
+
+    toggleDose.run({ tomada_hoje: novaTomada ? 1 : 0, estoque: novoEstoque }, med.id);
+    const updated = getOne.get(med.id);
+    res.json({ ...updated, tomada_hoje: updated.tomada_hoje === 1 });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao atualizar dose.' });
+  }
 });
 
 // DELETE /api/medicamentos/:id
 router.delete('/:id', (req, res) => {
-  const info = remove.run(req.params.id);
-  if (info.changes === 0) return res.status(404).json({ error: 'Medicamento não encontrado.' });
-  res.json({ success: true });
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ error: 'ID inválido.' });
+
+    const info = remove.run(id);
+    if (info.changes === 0) return res.status(404).json({ error: 'Medicamento não encontrado.' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao remover medicamento.' });
+  }
 });
 
-// POST /api/medicamentos/reset-doses — reseta doses do dia (uso interno/cron)
+// POST /api/medicamentos/reset-doses — reseta doses do dia
 router.post('/reset-doses', (req, res) => {
-  resetDoses.run();
-  res.json({ success: true });
+  try {
+    resetDoses.run();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao resetar doses.' });
+  }
 });
 
 module.exports = router;
