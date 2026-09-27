@@ -3,6 +3,7 @@
 const express            = require('express');
 const router             = express.Router();
 const fs                 = require('fs');
+const path               = require('path');
 const upload             = require('../upload');
 const { parsePrescription } = require('../parser');
 
@@ -19,14 +20,20 @@ router.post('/', upload.single('receita'), async (req, res) => {
 
     if (mimetype === 'application/pdf') {
       // PDF digital → extração direta de texto (alta precisão)
-      const pdfParse = require('pdf-parse');
-      const buffer   = fs.readFileSync(filePath);
-      const result   = await pdfParse(buffer);
-      text = result.text;
+      const { PDFParse } = require('pdf-parse');
+      const parser = new PDFParse({ data: fs.readFileSync(filePath) });
+      try {
+        text = (await parser.getText()).text;
+      } finally {
+        await parser.destroy();
+      }
     } else {
       // Imagem → OCR com Tesseract.js (português + inglês)
       const { createWorker } = require('tesseract.js');
-      const worker = await createWorker(['por', 'eng'], 1, { logger: () => {} });
+      const worker = await createWorker(['por', 'eng'], 1, {
+        logger: () => {},
+        cachePath: path.join(__dirname, '..', '..', 'data'), // modelos de idioma ficam fora do repo
+      });
       const { data } = await worker.recognize(filePath);
       text = data.text;
       await worker.terminate();

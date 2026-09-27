@@ -5,6 +5,10 @@
 
 let extractedData = [];
 
+function escaparHTML(texto = '') {
+  return String(texto).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function inicializarDragAndDrop() {
   const zone = document.getElementById('uploadZone');
   if (!zone) return;
@@ -42,17 +46,36 @@ function processarArquivoReceita(file) {
   const proc = document.getElementById('processingOverlay');
   if (proc) proc.style.display = 'flex';
 
-  setTimeout(() => {
-    if (proc) proc.style.display = 'none';
-    simularExtracao(file.name);
-  }, 1400);
+  if (!location.protocol.startsWith('http')) {
+    resetarUpload();
+    mostrarMensagem('A leitura automática precisa do servidor (npm start). Use o cadastro manual abaixo.', 'error');
+    return;
+  }
+
+  enviarParaScanner(file)
+    .then(meds => exibirExtracao(meds, file.name))
+    .catch(err => {
+      resetarUpload();
+      mostrarMensagem(err.message, 'error');
+    });
 }
 
-function simularExtracao(filename) {
-  extractedData = [
-    { name: 'Losartana Potássica', dosage: '50mg', frequency: 'daily', times: ['08:00'], notes: 'Tomar pela manhã' },
-    { name: 'Metformina', dosage: '850mg', frequency: 'twice', times: ['08:00', '20:00'], notes: 'Após refeições' },
-  ];
+async function enviarParaScanner(file) {
+  const form = new FormData();
+  form.append('receita', file);
+
+  const resp = await fetch('/api/scanner', { method: 'POST', body: form });
+  const body = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(body.error || 'Falha ao processar a receita.');
+  if (!body.medicamentos?.length) throw new Error('Nenhum medicamento reconhecido. Confira a imagem ou use o cadastro manual.');
+  return body.medicamentos;
+}
+
+function exibirExtracao(meds, filename) {
+  const proc = document.getElementById('processingOverlay');
+  if (proc) proc.style.display = 'none';
+
+  extractedData = meds.map(({ name, dosage, frequency, times, notes }) => ({ name, dosage, frequency, times, notes }));
 
   const dataReceita = document.getElementById('dataReceita');
   if (dataReceita) dataReceita.value = dataDeHoje();
@@ -76,9 +99,9 @@ function renderizarExtraidos() {
     <div class="extracted-med">
       <div class="med-dot"></div>
       <div style="flex:1">
-        <strong>${m.name}</strong> — <span class="text-primary font-semibold">${m.dosage}</span>
-        <br><small style="color:var(--text-muted)">${traduzirFrequencia(m.frequency)} • Horários: ${m.times.join(', ')}</small>
-        ${m.notes ? `<br><small style="color:var(--text-muted)">📝 ${m.notes}</small>` : ''}
+        <strong>${escaparHTML(m.name)}</strong> — <span class="text-primary font-semibold">${escaparHTML(m.dosage)}</span>
+        <br><small style="color:var(--text-muted)">${traduzirFrequencia(m.frequency)} • Horários: ${m.times.length ? m.times.join(', ') : 'quando necessário'}</small>
+        ${m.notes ? `<br><small style="color:var(--text-muted)">📝 ${escaparHTML(m.notes)}</small>` : ''}
       </div>
       <button class="btn-icon btn-sm" onclick="removerExtraido(${i})" title="Remover">✕</button>
     </div>
